@@ -1,0 +1,55 @@
+services:
+  web:
+    image: ghcr.io/import-ai/omnibox-web:main
+    build:
+      context: web
+
+  backend:
+    image: ghcr.io/import-ai/omnibox-backend:main
+    build:
+      context: backend
+    ports:
+      - "8000:8000"
+    environment:
+      ENV: "${ENV:-local}"
+
+  wizard:
+    image: ghcr.io/import-ai/omnibox-wizard:main
+    build:
+      context: wizard
+    ports:
+      - "8001:8000"
+    environment:
+      ENV: "${ENV:-local}"
+
+  wizard-worker:
+    image: ghcr.io/import-ai/omnibox-wizard:main
+    build:
+      context: wizard
+    environment:
+      ENV: "${ENV:-local}"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  meilisearch:
+    ports:
+      - "7700:7700"
+
+  init:
+    image: alpine/curl:8.10.0
+    command: 
+      - 'http://backend.:8000/internal/api/v1/sign-up'
+      - '-H'
+      - 'Content-Type: application/json'
+      - '-d'
+      - '{"username":"Zs4ioltDLd","password":"Nh4PLRKPQw","email":"omnibox@qq.com"}'
+    depends_on:
+      backend:
+        condition: service_healthy
